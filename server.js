@@ -22,7 +22,7 @@ app.engine('handlebars', ehandlebar({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 
 //data config to mongoose
-mongoose.connect('mongodb://localhost/');
+mongoose.connect('mongodb://localhost:27017');
 var db = mongoose.connection;
 // Show any mongoose errors
 db.on("error", function(error) {
@@ -36,10 +36,10 @@ console.log("Mongoose connection successful.");
 
 //comment and article models
 var Comment = require('./models/Note.js');
-var Article = require('./models/Articles.js');
+var Article = require('./models/Article.js');
 
 //controllers/routes
-var router= require('./controllers/controller.js');
+var router= require('./controller/controller.js');
 app.use('/', router);
 
 
