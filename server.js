@@ -6,6 +6,7 @@ var mongoose = require('mongoose');
 var morgan = require('morgan');
 var request = require('request');
 
+
 //init express
 var app = express();
 app.use(morgan('dev'));
@@ -21,3 +22,10 @@ app.engine('handlebars', ehandlebar({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 
 //data config to mongoose
+
+
+//launch App
+var PORT = process.env.PORT || 3000;
+app.listen(PORT, function(){
+    console.log('Running on port: ' + PORT);
+  });
