@@ -1,0 +1,7 @@
+html {
+    position: relative;
+    min-height: 100%;
+}
+.navbar-inverse {
+    background-image:rgb(136, 142, 207);
+}
