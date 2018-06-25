@@ -44,7 +44,7 @@ router.get('/scrape', function(req, res){
         //error handle
         var titlesArray = [];
         //grabs everying with teh class of "inner" for each "article" tag
-        $('article .inner').each(function(i, element){
+        $('article.inner').each(function(i, element){
             //create an empty result object
             var result = {};
             //collecting article Titles
