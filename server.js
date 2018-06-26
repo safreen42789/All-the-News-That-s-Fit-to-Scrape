@@ -1,74 +1,13 @@
-// var bodyParser = require('body-parser');
-// var cheerio = require('cheerio');
-// var express = require('express');
-// var ehandlebar = require('express-handlebars');
-// var mongoose = require('mongoose');
-// var morgan = require('morgan');
-// var request = require('request');
-
-
-// //init express
-// var app = express();
-// app.use(morgan('dev'));
-// app.use(bodyParser.urlencoded({
-//     extended: false
-// }));
-
-// //Serve Static 
-// app.use(express.static(process.cwd() + '/public'));
-
-// //ehandlebars
-// app.engine('handlebars', ehandlebar({defaultLayout: 'main'}));
-// app.set('view engine', 'handlebars');
-
-// //data config to mongoose
-// // If deployed, use the deployed database. Otherwise use the local mongoHeadlines database
-// var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017";
-
-// // Set mongoose to leverage built in JavaScript ES6 Promises
-// // Connect to the Mongo DB
-// mongoose.Promise = Promise;
-// mongoose.connect(MONGODB_URI);
-
-
-// //mongoose.connect('mongodb://localhost:27017');
-// var db = mongoose.connection;
-// // Show any mongoose errors
-// db.on("error", function(error) {
-//     console.log("Mongoose Error: ", error);
-//   });
-  
-// // Once logged in to the db through mongoose, log a success message
-// db.once("open", function() {
-// console.log("Mongoose connection was successful.");
-//   });
-
-// //comment and article models
-// var Comment = require('./models/Note.js');
-// var Article = require('./models/Article.js');
-
-// //controllers/routes
-// var router= require('./controller/controller.js');
-// app.use('/', router);
-
-
-
-
-
-  /* Showing Mongoose's "Populated" Method
-* =============================================== */
-
+//require dependencies
+var bodyParser = require('body-parser');
+var cheerio = require('cheerio'); // for web-scraping
 var express = require('express');
 var exphbs = require('express-handlebars');
-var bodyParser = require('body-parser');
-var mongoose = require('mongoose');
-
 var logger = require('morgan'); // for debugging
+var mongoose = require('mongoose');
 var request = require('request'); // for web-scraping
-var cheerio = require('cheerio'); // for web-scraping
 
-
-// Initialize Express for debugging & body parsing
+// Initializing express for debugging/body parsing
 var app = express();
 app.use(logger('dev'));
 app.use(bodyParser.urlencoded({
@@ -91,7 +30,6 @@ var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017";
 mongoose.Promise = Promise;
 mongoose.connect(MONGODB_URI);
 
-
 //mongoose.connect('mongodb://localhost:27017');
 var db = mongoose.connection;
 // Show any mongoose errors
@@ -104,40 +42,12 @@ db.once("open", function() {
 console.log("Mongoose connection was successful.");
   });
 
-// // Database Configuration with Mongoose
-// // ---------------------------------------------------------------------------------------------------------------
-// // Connect to localhost if not a production environment
-// // if(process.env.NODE_ENV == 'production'){
-// //   mongoose.connect('mongodb://heroku_58c6l923:2gecc0p46jq110h6lke7elc7vb@ds115214.mlab.com:15214/heroku_58c6l923');
-// // }
-// // else{
-// mongoose.connect('"mongodb://localhost:27017"');
-//   // YOU CAN IGNORE THE CONNECTION URL BELOW (LINE 41) THAT WAS JUST FOR DELETING STUFF ON A RE-DEPLOYMENT
-//   //mongoose.connect('mongodb://heroku_58c6l923:2gecc0p46jq110h6lke7elc7vb@ds115214.mlab.com:15214/heroku_58c6l923');
-// //}
-// var db = mongoose.connection;
-
-// // Show any Mongoose errors
-// db.on('error', function(err) {
-//   console.log('Mongoose Error: ', err);
-// });
-
-// // Once logged in to the db through mongoose, log a success message
-// db.once('open', function() {
-//   console.log('Mongoose connection successful.');
-// });
-
-// Import the Comment and Article models
+// Importing the note/article models
 var Comment = require('./models/Note.js');
 var Article = require('./models/Article.js');
 // ---------------------------------------------------------------------------------------------------------------
 
-// DROP DATABASE (FOR MY PERSONAL REFERENCE ONLY - YOU CAN IGNORE)
-// Article.remove({}, function(err) { 
-//    console.log('collection removed') 
-// });
-
-// Import Routes/Controller
+// Importing routes/controller
 var router = require('./controller/controller.js');
 app.use('/', router);
 
