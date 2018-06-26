@@ -1,92 +1,112 @@
-var cheerio = require('cheerio');
 var express = require('express');
-var path = require('path');
-var request = require('request');
 var router = express.Router();
+var path = require('path');
+var request = require('request'); // for web-scraping
+var cheerio = require('cheerio'); // for web-scraping
 
-//importing comment and article models
+// Import the Comment and Article models
 var Note = require('../models/Note.js');
 var Article = require('../models/Article.js');
 
-//rendering the index page
-router.get('/', function(req, res){
-    //scraping data
-    res.redirect('/scrape');
+// Index Page Render (first visit to the site)
+router.get('/', function (req, res){
+
+  // Scrape data
+  res.redirect('/scrape');
+
 });
 
-//Rendering the article page
-router.get('/articles', function(req, res){
-    //query MOngoDB for all article entries
-    Article.find().sort({_id: -1})
-    //populate commments associated with article
+
+// Articles Page Render
+router.get('/articles', function (req, res){
+
+  // Query MongoDB for all article entries (sort newest to top, assuming Ids increment)
+  Article.find().sort({_id: -1})
+
+    // But also populate all of the comments associated with the articles.
     .populate('notes')
-    //send comments to the handlebars template to be rendered
-    .exec(function(err, doc){
-        //logging any errors
-        if(err){
-            console.log(err);
-        }
-        //or send teh doc to browser as json object
-        else{
-            var hbsObject = {articles: doc}
-            res.render('index', hbsObject);
 
-        }
+    // Then, send them to the handlebars template to be rendered
+    .exec(function(err, doc){
+      // log any errors
+      if (err){
+        console.log(err);
+      } 
+      // or send the doc to the browser as a json object
+      else {
+        var hbsObject = {articles: doc}
+        res.render('index', hbsObject);
+        // res.json(hbsObject)
+      }
     });
+
 });
 
-//web scrape route
-router.get('/scrape', function(req, res){
-    //grab body of html request
-    request('http://www.theonion.com/', function(err, response, html){
-        //load html into cheerio and save it to $
-        var $ = cheerio.load(html);
-        //error handle
-        var titlesArray = [];
-        //grabs everying with teh class of "inner" for each "article" tag
-        $('article.inner').each(function(i, element){
-            //create an empty result object
-            var result = {};
-            //collecting article Titles
-            result.title = $(this).children('header').children('h2').text().trim() + "" ;
-            //collect article link
-            result.link = "http:www.theonion.com" + $(this).children('header').children('h2').children('a').attr('href').trim();
-            //collect article summary
-            result.summary = $(this).children('div').text().trim() + "";
 
-            //error handling 
-            if(result.title !== "" && result.summary !== ""){
+// Web Scrape Route
+router.get('/scrape', function(req, res) {
 
-                if(titlesArray.indexOf(result.title)== -1){
-                    // Push the saved item to our titlesArray to prevent duplicates thanks the the pesky Onion...
-                    titlesArray.push(result.title);
+  // First, grab the body of the html with request
+  request('http://www.theonion.com/', function(error, response, html) {
 
-                    // Only add the entry to the database if is not already there
-                    Article.count({ title: result.title}, function (err, test){
+    // Then, load html into cheerio and save it to $ for a shorthand selector
+    var $ = cheerio.load(html);
 
-                    // If the count is 0, then the entry is unique and should be saved
-                    if(test == 0){
+    // This is an error handler for the Onion website only, they have duplicate articles for some reason...
+    var titlesArray = [];
 
-                        // Using the Article model, create a new entry (note that the "result" object has the exact same key-value pairs of the model)
-                        var entry = new Article (result);
+    // Now, grab every everything with a class of "inner" with each "article" tag
+    $('article .inner').each(function(i, element) {
 
-                        // Save the entry to MongoDB
-                        entry.save(function(err, doc) {
-                        // log any errors
-                            if (err) {
-                                console.log(err);
-                            } 
-                            // or log the doc that was saved to the DB
-                            else {
-                                console.log(doc);
-                            }
-                        });
+        // Create an empty result object
+        var result = {};
 
-                    }
-                // Log that scrape is working, just the content was already in the Database
-                else{
-                    console.log('Redundant Database Content. Not saved to DB.')
-                }
+        // Collect the Article Title (contained in the "h2" of the "header" of "this")
+        result.title = $(this).children('header').children('h2').text().trim() + ""; //convert to string for error handling later
+
+        // Collect the Article Link (contained within the "a" tag of the "h2" in the "header" of "this")
+        result.link = 'http://www.theonion.com' + $(this).children('header').children('h2').children('a').attr('href').trim();
+
+        // Collect the Article Summary (contained in the next "div" inside of "this")
+        result.summary = $(this).children('div').text().trim() + ""; //convert to string for error handling later
+      
+
+        // Error handling to ensure there are no empty scrapes
+        if(result.title !== "" &&  result.summary !== ""){
+
+          // BUT we must also check within each scrape since the Onion has duplicate articles...
+          // Due to async, moongoose will not save the articles fast enough for the duplicates within a scrape to be caught
+          if(titlesArray.indexOf(result.title) == -1){
+
+            // Push the saved item to our titlesArray to prevent duplicates thanks the the pesky Onion...
+            titlesArray.push(result.title);
+
+            // Only add the entry to the database if is not already there
+            Article.count({ title: result.title}, function (err, test){
+
+              // If the count is 0, then the entry is unique and should be saved
+              if(test == 0){
+
+                // Using the Article model, create a new entry (note that the "result" object has the exact same key-value pairs of the model)
+                var entry = new Article (result);
+
+                // Save the entry to MongoDB
+                entry.save(function(err, doc) {
+                  // log any errors
+                  if (err) {
+                    console.log(err);
+                  } 
+                  // or log the doc that was saved to the DB
+                  else {
+                    console.log(doc);
+                  }
+                });
+
+              }
+              // Log that scrape is working, just the content was already in the Database
+              else{
+                console.log('Redundant Database Content. Not saved to DB.')
+              }
 
             });
         }
@@ -184,4 +204,3 @@ router.post('/remove/note/:id', function (req, res){
 
 // Export Router to Server.js
 module.exports = router;
-         
